@@ -44,6 +44,9 @@ export default {
       try {
         const data = await login(this.user)
         console.log(data)
+
+        // 通过提交 mutation 更新 Vuex 容器中的状态
+        this.$store.commit('setUser', data)
       } catch (err) {
         console.log(err)
         console.log('登陆失败')
