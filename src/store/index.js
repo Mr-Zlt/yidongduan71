@@ -17,7 +17,7 @@ export default new Vuex.Store({
       state.user = data
 
       // 将数据放到本地存储
-      auth.saveUser(state.user)
+      auth.saveUser(state, data)
     }
   },
   actions: {
