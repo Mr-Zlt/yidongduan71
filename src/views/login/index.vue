@@ -46,7 +46,7 @@ export default {
     return {
       user: {
         mobile: '18801185985',
-        code: '123456'
+        code: '246810'
       },
       loginLoading: false // 控制登陆请求的 loading 状态
     }
