@@ -14,6 +14,11 @@ export default new Router({
       name: 'Login',
       path: '/login',
       component: () => import('@/views/login')
+    },
+    {
+      name: 'text',
+      path: '/text',
+      component: () => import('@/views/text')
     }
   ]
 })
