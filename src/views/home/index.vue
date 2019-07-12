@@ -24,15 +24,15 @@
                   我们需要在 onload 中拿到本次加载的数据以后，将 loading 设置为 false
             -->
                 <van-list
-                v-model="loading"
-                :finished="finished"
+                v-model="channelItem.upPullLoading"
+                :finished="channelItem.upPullFinished"
                 finished-text="没有更多了"
                 @load="onLoad"
               >
                 <van-cell
-                  v-for="item in list"
-                  :key="item"
-                  :title="item"
+                  v-for="articleItem in channelItem.articles"
+                  :key="articleItem.art_id"
+                  :title="articleItem.title"
                 />
               </van-list>
           </van-tab>
@@ -94,9 +94,10 @@ export default {
       // 修改 channels， 将这个数据结构修改为满足我们使用的需求
       channels.forEach(item => {
         item.articles = [] // 用来存储当前文章的列表
+        item.timestamp = Date.now() // 存储下一页数据的时间戳
         item.downPullLoading = false // 控制当前频道的下拉刷新 loading 状态
         item.upPullLoading = false // 控制当前频道的上拉加载更多的 loading 状态
-        item.upPullFinishend = false // 控制当前频道数据是否加载完毕
+        item.upPullFinished = false // 控制当前频道数据是否加载完毕
       })
 
       this.channels = channels
@@ -104,10 +105,32 @@ export default {
     /**
        * 上拉加载更多， push数据
        */
-    onLoad () {
+    async onLoad () {
       console.log('onLoad')
-      const data = this.loadArticles()
-      console.log(data)
+      let data = []
+      data = await this.loadArticles()
+
+      // pre_timestamp 下一页的页码
+      //  results 文章列表
+      // console.log(data)
+
+      // 解决初始化的时候没有最新推荐的问题（没有最新数据,那就加载上一次推荐数据）
+      if (data.pre_timestamp && !data.results.length) {
+        this.activeChannel.timestamp = data.pre_timestamp
+
+        // 加载下一页数据
+        data = await this.loadArticles()
+      }
+
+      // 数据记载好以后，将 pre_timestamp 更新到当前频道的中用于加载下下页数据
+      this.activeChannel.timestamp = data.pre_timestamp
+
+      // 将文章数据更新到频道中
+      this.activeChannel.articles.push(...data.results)
+
+      // 数据加载完毕，取消上拉 loading
+      this.activeChannel.upPullLoading = false
+
       // 异步更新数据
       // setTimeout(() => {
       //   for (let i = 0; i < 10; i++) {
@@ -131,11 +154,11 @@ export default {
     },
 
     async loadArticles () {
-      const { id: channelId } = this.activeChannel
+      const { id: channelId, timestamp } = this.activeChannel
       const data = await getArticles({
         channelId, // 当前激活频道id
-        timestamp: Date.now(), // 用于请求分页的时间戳
-        with_top: 1 // 是否包含置顶数据
+        timestamp, // 用于请求分页的时间戳
+        withTop: 1 // 是否包含置顶数据
       })
       return data
     }
